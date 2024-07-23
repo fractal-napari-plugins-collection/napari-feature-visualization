@@ -20,8 +20,11 @@ def _init(widget):
             except OSError:
                 return [""]
         else:
-            df = pd.DataFrame(widget.label_layer.value.properties)
-            return list(df.columns)
+            try:
+                df = pd.DataFrame(widget.label_layer.value.properties)
+                return list(df.columns)
+            except AttributeError:
+                return [""]
 
     # set feature and label_column "default choices"
     # to be a function that gets the column names of the
@@ -70,7 +73,10 @@ def _init(widget):
     @widget.feature.changed.connect
     def update_rescaling(event):
         if widget.load_features_from.value == "CSV File":
-            df = get_df(widget.DataFrame.value)
+            if widget.DataFrame.value != pathlib.Path("."):
+                df = get_df(widget.DataFrame.value)
+            else:
+                df = pd.DataFrame()
         else:
             df = pd.DataFrame(widget.label_layer.value.properties)
 
@@ -144,6 +150,7 @@ def feature_vis(
     label_properties = {feature: np.round(properties_array, decimals=2)}
 
     colormap = dict(zip(site_df["label"], colors))
+    colormap[None] = [0.0, 0.0, 0.0, 0.0]
     # If in napari >= 0.4.19, use DirectLabelColormap
     try:
         from napari.utils.colormaps import DirectLabelColormap
