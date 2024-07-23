@@ -3,35 +3,19 @@ display_name: Napari Feature Visualization
 # use 'hidden' to remove plugin from napari hub search results
 visibility: public
 # see https://napari.org/stable/plugins/manifest.html for valid categories
-categories: ["Annotation", "Segmentation", "Acquisition"]
+categories: ["Annotation"]
 contributions:
   commands:
     - id: napari-feature-visualization.make_sample_data
       python_name: napari_feature_visualization._sample_data:make_sample_data
       title: Load sample data from Napari Feature Visualization
-    - id: napari-feature-visualization.make_container_widget
-      python_name: napari_feature_visualization:ImageThreshold
-      title: Make threshold Container widget
-    - id: napari-feature-visualization.make_magic_widget
-      python_name: napari_feature_visualization:threshold_magic_widget
-      title: Make threshold magic widget
-    - id: napari-feature-visualization.make_function_widget
-      python_name: napari_feature_visualization:threshold_autogenerate_widget
-      title: Make threshold function widget
-    - id: napari-feature-visualization.make_qwidget
-      python_name: napari_feature_visualization:ExampleQWidget
-      title: Make example QWidget
+    - id: napari-feature-visualization.feature_vis
+      python_name: napari_feature_visualization.feature_vis:feature_vis
+      title: Visualize features on label layer
   sample_data:
     - command: napari-feature-visualization.make_sample_data
       display_name: Napari Feature Visualization
       key: unique_id.1
   widgets:
-    - command: napari-feature-visualization.make_container_widget
-      display_name: Container Threshold
-    - command: napari-feature-visualization.make_magic_widget
-      display_name: Magic Threshold
-    - command: napari-feature-visualization.make_function_widget
-      autogenerate: true
-      display_name: Autogenerate Threshold
-    - command: napari-feature-visualization.make_qwidget
-      display_name: Example QWidget
+    - command: napari-feature-visualization.feature_vis
+      display_name: Feature Visualization
