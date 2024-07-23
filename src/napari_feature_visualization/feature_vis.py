@@ -105,7 +105,6 @@ def feature_vis(
     lower_contrast_limit: float = 100,
     upper_contrast_limit: float = 900,
 ):
-
     if load_features_from == "CSV File":
         site_df = get_df(DataFrame)
     else:

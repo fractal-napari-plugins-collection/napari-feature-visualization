@@ -36,6 +36,9 @@ def test_feature_vis_widget(make_napari_viewer):
 
     feature_vis_widget = feature_vis()
 
+    # FIXME: It appears feature test is used. How do I test other feature
+    # selection? Setting it in the function appears to have no effect.
+
     # if we "call" this object, it'll execute our function
     feature_vis_widget(
         label_layer=label_layer,
