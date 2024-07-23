@@ -1,3 +1,5 @@
+import importlib
+
 import numpy as np
 import pandas as pd
 
@@ -16,7 +18,7 @@ def create_label_img():
     return lbl_img_np
 
 
-def test_image_threshold_widget(make_napari_viewer):
+def test_feature_vis_widget(make_napari_viewer):
     lbl_img = create_label_img()
 
     # Dummy df for this test
@@ -40,8 +42,28 @@ def test_image_threshold_widget(make_napari_viewer):
         load_features_from="Layer Properties",
         feature="feature1",
     )
-    assert len(label_layer.colormap.colors) == 7
-    np.testing.assert_array_almost_equal(
-        label_layer.colormap.colors[3],
-        np.array([0.229739, 0.322361, 0.545706, 1.0]),
+
+    # Test differently depending on napari version, as colormap class has
+    # changed
+    print(
+        importlib.util.find_spec("napari.utils.colormaps.DirectLabelColormap")
     )
+    colormaps_module = importlib.import_module("napari.utils.colormaps")
+    DirectLabelColormap = getattr(
+        colormaps_module, "DirectLabelColormap", None
+    )
+    if DirectLabelColormap is not None:
+        # napari >= 0.4.19 tests
+        from napari.utils.colormaps import DirectLabelColormap
+
+        np.testing.assert_array_almost_equal(
+            label_layer.colormap.color_dict[3],
+            np.array([0.229739, 0.322361, 0.545706, 1.0]),
+        )
+    else:
+        # napari < 0.4.19 test
+        assert len(label_layer.colormap.colors) == 6
+        np.testing.assert_array_almost_equal(
+            label_layer.colormap.colors[2],
+            np.array([0.229739, 0.322361, 0.545706, 1.0]),
+        )
