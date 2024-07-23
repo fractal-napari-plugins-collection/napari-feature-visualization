@@ -29,6 +29,8 @@ dependencies = [
     "magicgui",
     "qtpy",
     "scikit-image",
+    "matplotlib",
+    "pandas",
 ]
 
 [project.optional-dependencies]
