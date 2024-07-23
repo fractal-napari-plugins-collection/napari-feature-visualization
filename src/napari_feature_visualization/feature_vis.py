@@ -48,27 +48,13 @@ def _init(widget):
         elif "index" in features:
             widget.label_column.value = "index"
 
-    @widget.load_features_from.changed.connect
-    def switch_feature_load_mode(event):
-        # event value will be the new path
-        # get_df will give you the cached df
-        # ...reset_choices() calls the "get_feature_choices" function above
-        # to keep them updated with the current dataframe
-        widget.feature.reset_choices()
-        widget.label_column.reset_choices()
-        features = widget.feature.choices
-        if "label" in features:
-            widget.label_column.value = "label"
-        elif "Label" in features:
-            widget.label_column.value = "Label"
-        elif "index" in features:
-            widget.label_column.value = "index"
-
         # if load_features_from is toggled, make the widget.DataFrame disappear
         if widget.load_features_from.value == "Layer Properties":
             widget.DataFrame.hide()
         else:
             widget.DataFrame.show()
+
+    widget.load_features_from.changed.connect(update_df_columns)
 
     @widget.feature.changed.connect
     def update_rescaling(event):
