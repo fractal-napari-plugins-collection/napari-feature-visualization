@@ -86,3 +86,4 @@ venv/
 # Files produced during testing
 *.csv
 *.clf
+feature_vis_demo.gif
