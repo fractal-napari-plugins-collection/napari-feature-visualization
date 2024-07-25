@@ -9,6 +9,10 @@
 
 Visualizing feature measurements on label images in napari
 
+<img src="https://github.com/user-attachments/assets/d2c83d70-d122-4e08-812f-12c5e6006488" alt="feature_vis_demo" style="width: 100%;"/>
+
+Supports both loading features from a CSV file or visualizing features saved in the label_layer.features dataframe. Through plugins like the [napari OME-Zarr navigator](https://github.com/fractal-napari-plugins-collection/napari-ome-zarr-navigator), this enables visualizing feature measurements stored in OME-Zarrs.
+
 ----------------------------------
 
 This [napari] plugin was generated with [Cookiecutter] using [@napari]'s [cookiecutter-napari-plugin] template.
