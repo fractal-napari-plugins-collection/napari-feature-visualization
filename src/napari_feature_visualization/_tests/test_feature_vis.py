@@ -1,7 +1,8 @@
-import importlib
-
+import napari
 import numpy as np
 import pandas as pd
+import pytest
+from packaging import version
 
 from napari_feature_visualization.feature_vis import feature_vis
 
@@ -18,55 +19,93 @@ def create_label_img():
     return lbl_img_np
 
 
-def test_feature_vis_widget(make_napari_viewer):
-    lbl_img = create_label_img()
-
-    # Dummy df for this test
+def create_feature_df():
     d = {
         "test": [-100, 200, 300, 500, 900, 300],
         "label": [1, 2, 3, 4, 5, 6],
+        "index": [1, 2, 3, 4, 5, 6],
         "feature1": [100, 200, 300, 500, 900, 1001],
         "feature2": [2200, 2100, 2000, 1500, 1300, 1001],
     }
     df = pd.DataFrame(data=d)
+    # Ensure index is the labels for correct matching
+    return df
 
+
+@pytest.mark.parametrize(
+    "load_features_from", ["CSV File", "Layer Properties"]
+)
+def test_feature_vis_widget(make_napari_viewer, load_features_from):
+    lbl_img = create_label_img()
+    df = create_feature_df()
     viewer = make_napari_viewer()
     label_layer = viewer.add_labels(lbl_img)
-    label_layer.features = df
 
     feature_vis_widget = feature_vis()
 
-    # FIXME: It appears feature test is used. How do I test other feature
-    # selection? Setting it in the function appears to have no effect.
+    if load_features_from == "CSV File":
+        df.to_csv("example_data.csv", index=False)
+        # if we "call" this object, it'll execute our function
+        feature_vis_widget(
+            label_layer=label_layer,
+            load_features_from=load_features_from,
+            DataFrame="example_data.csv",
+            label_column="label",
+            feature="feature1",
+        )
+    elif load_features_from == "Layer Properties":
+        label_layer.features = df
+        # if we "call" this object, it'll execute our function
+        feature_vis_widget(
+            label_layer=label_layer,
+            load_features_from=load_features_from,
+            feature="feature1",
+            label_column="label",
+        )
 
-    # if we "call" this object, it'll execute our function
-    feature_vis_widget(
-        label_layer=label_layer,
-        load_features_from="Layer Properties",
-        feature="feature1",
-    )
-
-    # Test differently depending on napari version, as colormap class has
-    # changed
-    print(
-        importlib.util.find_spec("napari.utils.colormaps.DirectLabelColormap")
-    )
-    colormaps_module = importlib.import_module("napari.utils.colormaps")
-    DirectLabelColormap = getattr(
-        colormaps_module, "DirectLabelColormap", None
-    )
-    if DirectLabelColormap is not None:
-        # napari >= 0.4.19 tests
-        from napari.utils.colormaps import DirectLabelColormap
-
+    napari_version = version.parse(napari.__version__)
+    if napari_version >= version.parse("0.4.19"):
+        assert len(label_layer.colormap.color_dict) == 8
         np.testing.assert_array_almost_equal(
             label_layer.colormap.color_dict[3],
             np.array([0.229739, 0.322361, 0.545706, 1.0]),
         )
     else:
-        # napari < 0.4.19 test
-        assert len(label_layer.colormap.colors) == 6
+        assert len(label_layer.colormap.colors) == 7
         np.testing.assert_array_almost_equal(
-            label_layer.colormap.colors[2],
+            label_layer.colormap.colors[3],
             np.array([0.229739, 0.322361, 0.545706, 1.0]),
         )
+
+
+# def test_feature_vis_from_csv(make_napari_viewer):
+#     lbl_img = create_label_img()
+#     df = create_feature_df()
+
+#     viewer = make_napari_viewer()
+#     label_layer = viewer.add_labels(lbl_img)
+#     label_layer.features = df
+
+#     feature_vis_widget = feature_vis()
+
+#     # if we "call" this object, it'll execute our function
+#     feature_vis_widget(
+#         label_layer=label_layer,
+#         load_features_from="CSV File",
+#         DataFrame="example_data.csv",
+#         feature="feature1",
+#     )
+
+#     napari_version = version.parse(napari.__version__)
+#     if napari_version >= version.parse("0.4.19"):
+#         assert len(label_layer.colormap.color_dict) == 8
+#         np.testing.assert_array_almost_equal(
+#             label_layer.colormap.color_dict[3],
+#             np.array([0.229739, 0.322361, 0.545706, 1.0]),
+#         )
+#     else:
+#         assert len(label_layer.colormap.colors) == 7
+#         np.testing.assert_array_almost_equal(
+#             label_layer.colormap.colors[3],
+#             np.array([0.229739, 0.322361, 0.545706, 1.0]),
+#         )

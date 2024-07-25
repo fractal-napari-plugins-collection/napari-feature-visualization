@@ -31,6 +31,7 @@ dependencies = [
     "scikit-image",
     "matplotlib",
     "pandas",
+    "packaging",
 ]
 
 [project.optional-dependencies]

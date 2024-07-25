@@ -2,13 +2,24 @@
 
 import pathlib
 
-import matplotlib.pyplot as plt
+import matplotlib
 import napari
 import numpy as np
 import pandas as pd
 from magicgui import magic_factory
+from packaging import version
 
 from napari_feature_visualization.utils import ColormapChoices, get_df
+
+
+def check_default_label_column(df):
+    if "label" in df:
+        return "label"
+    elif "Label" in df:
+        return "Label"
+    elif "index" in df:
+        return "index"
+    return ""
 
 
 def _init(widget):
@@ -41,12 +52,7 @@ def _init(widget):
         widget.feature.reset_choices()
         widget.label_column.reset_choices()
         features = widget.feature.choices
-        if "label" in features:
-            widget.label_column.value = "label"
-        elif "Label" in features:
-            widget.label_column.value = "Label"
-        elif "index" in features:
-            widget.label_column.value = "index"
+        widget.label_column.value = check_default_label_column(features)
 
         # if load_features_from is toggled, make the widget.DataFrame disappear
         if widget.load_features_from.value == "Layer Properties":
@@ -109,15 +115,18 @@ def feature_vis(
         site_df = get_df(DataFrame)
     else:
         site_df = pd.DataFrame(label_layer.properties)
-        label_column = "label"
+
+    if label_column == "":
+        label_column = check_default_label_column(site_df)
 
     site_df.loc[:, "label"] = site_df[str(label_column)].astype(int)
     # Check that there is one unique label for every entry in the dataframe
-    # => It's a site dataframe, not one containing many different sites
-    # TODO: How to feedback this issue to the user?
-    assert len(site_df["label"].unique()) == len(
-        site_df
-    ), "A feature dataframe with non-unique labels was provided. The visualize_feature_on_label_layer function is not designed for this."
+    if len(site_df["label"].unique()) != len(site_df):
+        raise ValueError(
+            "A feature dataframe with non-unique labels was provided. The "
+            "visualize_feature_on_label_layer function is not designed for "
+            "this."
+        )
     # Rescale feature between 0 & 1 to make a colormap
     site_df["feature_scaled"] = (site_df[feature] - lower_contrast_limit) / (
         upper_contrast_limit - lower_contrast_limit
@@ -126,7 +135,9 @@ def feature_vis(
     site_df.loc[site_df["feature_scaled"] < 0, "feature_scaled"] = 0
     site_df.loc[site_df["feature_scaled"] > 1, "feature_scaled"] = 1
 
-    colors = plt.cm.get_cmap(Colormap.value)(site_df["feature_scaled"])
+    colors = matplotlib.colormaps.get_cmap(Colormap.value)(
+        site_df["feature_scaled"]
+    )
 
     # Create an array where the index is the label value and the value is
     # the feature value
@@ -135,13 +146,16 @@ def feature_vis(
     label_properties = {feature: np.round(properties_array, decimals=2)}
 
     colormap = dict(zip(site_df["label"], colors))
-    colormap[None] = [0.0, 0.0, 0.0, 0.0]
-    # If in napari >= 0.4.19, use DirectLabelColormap
-    try:
+    # Show missing objects as black
+    colormap[None] = [0.0, 0.0, 0.0, 1.0]
+
+    # Handle different colormap APIs depending on the napari version
+    napari_version = version.parse(napari.__version__)
+    if napari_version >= version.parse("0.4.19"):
         from napari.utils.colormaps import DirectLabelColormap
 
         label_layer.colormap = DirectLabelColormap(color_dict=colormap)
-    except ImportError:
+    else:
         label_layer.color = colormap
 
     if load_features_from == "CSV File":
