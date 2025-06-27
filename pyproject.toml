@@ -73,7 +73,7 @@ write_to = "src/napari_feature_visualization/_version.py"
 
 [tool.black]
 line-length = 79
-target-version = ['py38', 'py39', 'py310']
+target-version = ['py39', 'py310', 'py311', 'py312']
 
 [tool.ruff]
 line-length = 79
@@ -118,5 +118,5 @@ exclude = [
     "*_vendor*",
 ]
 
-target-version = "py38"
+target-version = "py310"
 fix = true
