@@ -1,7 +1,7 @@
 """napari feature visualization widget"""
 
 import pathlib
-import matplotlib
+import matplotlib as mpl
 import napari
 import numpy as np
 import pandas as pd
@@ -180,7 +180,7 @@ def feature_vis(
         # Categorical feature
         unique_features = site_df[feature].unique()
         num_categories = len(unique_features)
-        
+
         # Create a mapping from categorical feature to a label colormap
         # Start at 1 because 0 is reserved for background/None in label colormaps
         feature_map = {feat: i + 1 for i, feat in enumerate(unique_features)}
@@ -193,11 +193,10 @@ def feature_vis(
             categorical_cmap = label_colormap(num_categories + 1)
             colors = categorical_cmap.map(mapped_features.values)
         else:
-            import matplotlib as mpl
             mpl_cmap = mpl.colormaps[cmap_name]
-            
+
             sampled_colors = mpl_cmap(np.arange(num_categories))
-            
+
             # mapped_features is 1-indexed (from 1 to num_categories)
             indices = mapped_features.values - 1
             colors = sampled_colors[indices]
