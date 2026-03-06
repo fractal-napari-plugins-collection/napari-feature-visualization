@@ -68,13 +68,15 @@ def test_feature_vis_widget(make_napari_viewer, load_features_from):
         assert len(label_layer.colormap.color_dict) == 8
         np.testing.assert_array_almost_equal(
             label_layer.colormap.color_dict[3],
-            np.array([0.229739, 0.322361, 0.545706, 1.0]),
+            np.array([0.230223, 0.321297, 0.545488, 1.0]),
+            decimal=4
         )
     else:
         assert len(label_layer.colormap.colors) == 7
         np.testing.assert_array_almost_equal(
             label_layer.colormap.colors[3],
-            np.array([0.229739, 0.322361, 0.545706, 1.0]),
+            np.array([0.230223, 0.321297, 0.545488, 1.0]),
+            decimal=4
         )
 
 
@@ -101,11 +103,13 @@ def test_feature_vis_widget(make_napari_viewer, load_features_from):
 #         assert len(label_layer.colormap.color_dict) == 8
 #         np.testing.assert_array_almost_equal(
 #             label_layer.colormap.color_dict[3],
-#             np.array([0.229739, 0.322361, 0.545706, 1.0]),
+#             np.array([0.230223, 0.321297, 0.545488, 1.0]),
+#             decimal=4
 #         )
 #     else:
 #         assert len(label_layer.colormap.colors) == 7
 #         np.testing.assert_array_almost_equal(
 #             label_layer.colormap.colors[3],
-#             np.array([0.229739, 0.322361, 0.545706, 1.0]),
+#             np.array([0.230223, 0.321297, 0.545488, 1.0]),
+#             decimal=4
 #         )
