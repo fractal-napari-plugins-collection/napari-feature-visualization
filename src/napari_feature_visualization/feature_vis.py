@@ -8,6 +8,7 @@ import pandas as pd
 from napari.utils.colormaps.colormap_utils import AVAILABLE_COLORMAPS
 from napari.utils.colormaps import label_colormap
 from magicgui import magic_factory
+from napari.utils.notifications import show_warning
 from packaging import version
 from napari_feature_visualization.utils import get_df
 
@@ -149,11 +150,11 @@ def feature_vis(
     site_df.loc[:, "label"] = site_df[str(label_column)].astype(int)
     # Check that there is one unique label for every entry in the dataframe
     if len(site_df["label"].unique()) != len(site_df):
-        raise ValueError(
-            "A feature dataframe with non-unique labels was provided. The "
-            "visualize_feature_on_label_layer function is not designed for "
-            "this."
+        show_warning(
+            f"The selected label column '{label_column}' contains non-unique values. "
+            "Please select a column where each row has a unique identifier."
         )
+        return
 
     is_continuous = pd.api.types.is_numeric_dtype(site_df[feature])
     properties_array = np.zeros(site_df["label"].max() + 1)
