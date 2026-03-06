@@ -1,15 +1,15 @@
 """napari feature visualization widget"""
 
 import pathlib
-
 import matplotlib
 import napari
 import numpy as np
 import pandas as pd
+from napari.utils.colormaps.colormap_utils import AVAILABLE_COLORMAPS
+from napari.utils.colormaps import label_colormap
 from magicgui import magic_factory
 from packaging import version
-
-from napari_feature_visualization.utils import ColormapChoices, get_df
+from napari_feature_visualization.utils import get_df
 
 
 def check_default_label_column(df):
@@ -73,13 +73,14 @@ def _init(widget):
             df = pd.DataFrame(widget.label_layer.value.properties)
 
         try:
-            quantiles = (0.01, 0.99)
-            widget.lower_contrast_limit.value = df[event].quantile(
-                quantiles[0]
-            )
-            widget.upper_contrast_limit.value = df[event].quantile(
-                quantiles[1]
-            )
+            if pd.api.types.is_numeric_dtype(df[event]):
+                quantiles = (0.01, 0.99)
+                widget.lower_contrast_limit.value = df[event].quantile(
+                    quantiles[0]
+                )
+                widget.upper_contrast_limit.value = df[event].quantile(
+                    quantiles[1]
+                )
         except KeyError:
             # Don't update the limits if a feature name is entered that isn't in the dataframe
             pass
@@ -98,6 +99,7 @@ def _init(widget):
     lower_contrast_limit={"min": -100000000, "max": 100000000},
     upper_contrast_limit={"min": -100000000, "max": 100000000},
     feature={"choices": [""]},
+    Colormap={"choices": list(AVAILABLE_COLORMAPS.keys())},
     label_column={"choices": [""]},
     widget_init=_init,
 )
@@ -106,7 +108,7 @@ def feature_vis(
     load_features_from: str,
     DataFrame: pathlib.Path,
     feature="",
-    Colormap=ColormapChoices.viridis,
+    Colormap="viridis",
     label_column="",
     lower_contrast_limit: float = 100,
     upper_contrast_limit: float = 900,
@@ -127,25 +129,46 @@ def feature_vis(
             "visualize_feature_on_label_layer function is not designed for "
             "this."
         )
-    # Rescale feature between 0 & 1 to make a colormap
-    site_df["feature_scaled"] = (site_df[feature] - lower_contrast_limit) / (
-        upper_contrast_limit - lower_contrast_limit
-    )
-    # Cap the measurement between 0 & 1
-    site_df.loc[site_df["feature_scaled"] < 0, "feature_scaled"] = 0
-    site_df.loc[site_df["feature_scaled"] > 1, "feature_scaled"] = 1
 
-    colors = matplotlib.colormaps.get_cmap(Colormap.value)(
-        site_df["feature_scaled"]
-    )
-
-    # Create an array where the index is the label value and the value is
-    # the feature value
+    is_continuous = pd.api.types.is_numeric_dtype(site_df[feature])
     properties_array = np.zeros(site_df["label"].max() + 1)
-    properties_array[site_df["label"]] = site_df[feature]
-    label_properties = {feature: np.round(properties_array, decimals=2)}
 
-    colormap = dict(zip(site_df["label"], colors))
+    if is_continuous:
+        # Rescale feature between 0 & 1 to make a colormap
+        site_df["feature_scaled"] = (site_df[feature] - lower_contrast_limit) / (
+            upper_contrast_limit - lower_contrast_limit
+        )
+        # Cap the measurement between 0 & 1
+        site_df.loc[site_df["feature_scaled"] < 0, "feature_scaled"] = 0
+        site_df.loc[site_df["feature_scaled"] > 1, "feature_scaled"] = 1
+
+        from napari.utils.colormaps import ensure_colormap
+        cmap = ensure_colormap(Colormap)
+        colors = cmap.map(site_df["feature_scaled"].values)
+
+        properties_array[site_df["label"]] = site_df[feature]
+        label_properties = {feature: np.round(properties_array, decimals=2)}
+
+        colormap = dict(zip(site_df["label"], colors))
+    else:
+        # Categorical feature
+        unique_features = site_df[feature].unique()
+        # Create a mapping from categorical feature to a label colormap
+        # Start at 1 because 0 is reserved for background/None in label colormaps
+        feature_map = {feat: i + 1 for i, feat in enumerate(unique_features)}
+        mapped_features = site_df[feature].map(feature_map)
+
+        # napari's label_colormap generates a categorical colormap
+        categorical_cmap = label_colormap(len(unique_features) + 1)
+        colors = categorical_cmap.map(mapped_features.values)
+
+        # Object dtype arrays are fine for properties
+        properties_array = np.zeros(site_df["label"].max() + 1, dtype=object)
+        properties_array[site_df["label"]] = site_df[feature]
+        label_properties = {feature: properties_array}
+
+        colormap = dict(zip(site_df["label"], colors))
+
     # Show missing objects as black
     colormap[None] = [0.0, 0.0, 0.0, 1.0]
 
