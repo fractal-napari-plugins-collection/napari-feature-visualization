@@ -11,6 +11,11 @@ from magicgui import magic_factory
 from packaging import version
 from napari_feature_visualization.utils import get_df
 
+QUALITATIVE_CMAPS = {
+    'Accent': 8, 'Dark2': 8, 'Paired': 12, 'Pastel1': 9, 'Pastel2': 8, 
+    'Set1': 9, 'Set2': 8, 'Set3': 12, 'tab10': 10, 'tab20': 20, 
+    'tab20b': 20, 'tab20c': 20
+}
 
 def check_default_label_column(df):
     if "label" in df:
@@ -81,6 +86,26 @@ def _init(widget):
                 widget.upper_contrast_limit.value = df[event].quantile(
                     quantiles[1]
                 )
+                widget.Colormap.choices = list(AVAILABLE_COLORMAPS.keys())
+                if "viridis" in widget.Colormap.choices:
+                    widget.Colormap.value = "viridis"
+            else:
+                num_categories = df[event].nunique()
+                qual_choices = [
+                    f"{cmap} ({max_colors})" for cmap, max_colors in QUALITATIVE_CMAPS.items() 
+                    if max_colors >= num_categories
+                ]
+                if not qual_choices:
+                    widget.Colormap.choices = ["label_colormap"]
+                    widget.Colormap.value = "label_colormap"
+                else:
+                    widget.Colormap.choices = qual_choices
+                    tab10_choice = next((c for c in qual_choices if c.startswith("tab10 (")), None)
+                    if tab10_choice:
+                        widget.Colormap.value = tab10_choice
+                    else:
+                        widget.Colormap.value = qual_choices[0]
+
         except KeyError:
             # Don't update the limits if a feature name is entered that isn't in the dataframe
             pass
@@ -153,14 +178,28 @@ def feature_vis(
     else:
         # Categorical feature
         unique_features = site_df[feature].unique()
+        num_categories = len(unique_features)
+        
         # Create a mapping from categorical feature to a label colormap
         # Start at 1 because 0 is reserved for background/None in label colormaps
         feature_map = {feat: i + 1 for i, feat in enumerate(unique_features)}
         mapped_features = site_df[feature].map(feature_map)
 
-        # napari's label_colormap generates a categorical colormap
-        categorical_cmap = label_colormap(len(unique_features) + 1)
-        colors = categorical_cmap.map(mapped_features.values)
+        cmap_name = Colormap.split(" (")[0]
+
+        if cmap_name == "label_colormap" or cmap_name not in QUALITATIVE_CMAPS:
+            # napari's label_colormap generates a categorical colormap
+            categorical_cmap = label_colormap(num_categories + 1)
+            colors = categorical_cmap.map(mapped_features.values)
+        else:
+            import matplotlib as mpl
+            mpl_cmap = mpl.colormaps[cmap_name]
+            
+            sampled_colors = mpl_cmap(np.arange(num_categories))
+            
+            # mapped_features is 1-indexed (from 1 to num_categories)
+            indices = mapped_features.values - 1
+            colors = sampled_colors[indices]
 
         # Object dtype arrays are fine for properties
         properties_array = np.zeros(site_df["label"].max() + 1, dtype=object)
