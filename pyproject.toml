@@ -70,12 +70,8 @@ where = ["src"]
 write_to = "src/napari_feature_visualization/_version.py"
 
 
-[tool.black]
-line-length = 79
-target-version = ['py310', 'py311', 'py312']
-
 [tool.ruff]
-line-length = 79
+line-length = 88
 lint.select = [
     "E", "F", "W", #flake8
     "UP", # pyupgrade
@@ -90,8 +86,7 @@ lint.select = [
     "SIM", # flake8-simplify
 ]
 lint.ignore = [
-    "E501", # line too long. let black handle this
-    "UP006", "UP007", # type annotation. As using magicgui require runtime type annotation then we disable this.
+    "UP006", "UP007", # type annotation. magicgui requires runtime type annotations.
 ]
 
 exclude = [

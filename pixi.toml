@@ -1,0 +1,31 @@
+[workspace]
+name = "napari-feature-visualization"
+channels = ["conda-forge"]
+platforms = ["osx-arm64", "osx-64", "linux-64", "win-64"]
+
+[dependencies]
+python = ">=3.10,<3.13"
+napari = ">=0.7.0"
+numpy = "*"
+pandas = "*"
+matplotlib = "*"
+scikit-image = "*"
+packaging = "*"
+magicgui = "*"
+qtpy = "*"
+pyqt6 = "*"
+superqt = "*"
+pytest = "*"
+pytest-cov = "*"
+pytest-qt = "*"
+ruff = "*"
+
+[pypi-dependencies]
+napari-feature-visualization = { path = ".", editable = true }
+
+[tasks]
+test = "pytest -v --color=yes --cov=napari_feature_visualization --cov-report=xml"
+napari = "napari"
+lint = "ruff check src"
+format = "ruff format src"
+check = { depends-on = ["lint", "test"] }
