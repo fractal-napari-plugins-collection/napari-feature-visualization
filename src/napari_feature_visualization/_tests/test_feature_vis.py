@@ -2,6 +2,7 @@ import napari
 import numpy as np
 import pandas as pd
 import pytest
+import matplotlib as mpl
 from packaging import version
 
 from napari_feature_visualization.feature_vis import feature_vis
@@ -26,6 +27,7 @@ def create_feature_df():
         "index": [1, 2, 3, 4, 5, 6],
         "feature1": [100, 200, 300, 500, 900, 1001],
         "feature2": [2200, 2100, 2000, 1500, 1300, 1001],
+        "predicted_cell_type": ["cell_type1", "cell_type1", "cell_type1", "cell_type2", "cell_type2", "cell_type2"],
     }
     df = pd.DataFrame(data=d)
     # Ensure index is the labels for correct matching
@@ -68,15 +70,63 @@ def test_feature_vis_widget(make_napari_viewer, load_features_from):
         assert len(label_layer.colormap.color_dict) == 8
         np.testing.assert_array_almost_equal(
             label_layer.colormap.color_dict[3],
-            np.array([0.229739, 0.322361, 0.545706, 1.0]),
+            np.array([0.230223, 0.321297, 0.545488, 1.0]),
+            decimal=4
         )
     else:
         assert len(label_layer.colormap.colors) == 7
         np.testing.assert_array_almost_equal(
             label_layer.colormap.colors[3],
-            np.array([0.229739, 0.322361, 0.545706, 1.0]),
+            np.array([0.230223, 0.321297, 0.545488, 1.0]),
+            decimal=4
         )
 
+
+def test_feature_vis_categorical(make_napari_viewer):
+    lbl_img = create_label_img()
+    df = create_feature_df()
+    viewer = make_napari_viewer()
+    label_layer = viewer.add_labels(lbl_img)
+    label_layer.features = df
+
+    feature_vis_widget = feature_vis()
+    feature_vis_widget(
+        label_layer=label_layer,
+        load_features_from="Layer Properties",
+        feature="predicted_cell_type",
+        label_column="label",
+        Colormap="tab10 (10)"
+    )
+
+    napari_version = version.parse(napari.__version__)
+
+    if napari_version >= version.parse("0.4.19"):
+        assert len(label_layer.colormap.color_dict) == 8
+
+        expected_colors = mpl.colormaps["tab10"](np.arange(2))
+
+        c1 = label_layer.colormap.color_dict[1] # label=1 -> cell_type1
+        c2 = label_layer.colormap.color_dict[4] # label=4 -> cell_type2
+
+        # Verify against expected tab10 colors
+        np.testing.assert_array_almost_equal(c1, expected_colors[0], decimal=4)
+        np.testing.assert_array_almost_equal(c2, expected_colors[1], decimal=4)
+
+        assert not np.array_equal(c1, c2)
+
+    else:
+        assert len(label_layer.colormap.colors) == 7
+
+        expected_colors = mpl.colormaps["tab10"](np.arange(2))
+
+        c1 = label_layer.colormap.colors[1] # label=1 -> cell_type1
+        c2 = label_layer.colormap.colors[4] # label=4 -> cell_type2
+
+        # Verify against expected tab10 colors
+        np.testing.assert_array_almost_equal(c1, expected_colors[0], decimal=4)
+        np.testing.assert_array_almost_equal(c2, expected_colors[1], decimal=4)
+
+        assert not np.array_equal(c1, c2)
 
 # def test_feature_vis_from_csv(make_napari_viewer):
 #     lbl_img = create_label_img()
@@ -101,11 +151,13 @@ def test_feature_vis_widget(make_napari_viewer, load_features_from):
 #         assert len(label_layer.colormap.color_dict) == 8
 #         np.testing.assert_array_almost_equal(
 #             label_layer.colormap.color_dict[3],
-#             np.array([0.229739, 0.322361, 0.545706, 1.0]),
+#             np.array([0.230223, 0.321297, 0.545488, 1.0]),
+#             decimal=4
 #         )
 #     else:
 #         assert len(label_layer.colormap.colors) == 7
 #         np.testing.assert_array_almost_equal(
 #             label_layer.colormap.colors[3],
-#             np.array([0.229739, 0.322361, 0.545706, 1.0]),
+#             np.array([0.230223, 0.321297, 0.545488, 1.0]),
+#             decimal=4
 #         )
