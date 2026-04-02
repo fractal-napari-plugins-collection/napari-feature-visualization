@@ -17,7 +17,7 @@ def test_make_sample_data():
     features = kwargs["features"]
     assert isinstance(features, pd.DataFrame)
     assert set(features.columns) >= {"label", "feature1", "feature2", "cell_type"}
-    assert len(features) == 6
+    assert len(features) == 7
 
     # continuous columns are numeric
     assert pd.api.types.is_numeric_dtype(features["feature1"])

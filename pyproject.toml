@@ -31,6 +31,7 @@ dependencies = [
     "matplotlib",
     "pandas",
     "packaging",
+    "napari>=0.6",
 ]
 
 [project.optional-dependencies]

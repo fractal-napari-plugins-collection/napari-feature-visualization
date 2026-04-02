@@ -6945,8 +6945,8 @@ packages:
   timestamp: 1760544595269
 - pypi: ./
   name: napari-feature-visualization
-  version: 0.0.3.dev10+g6650537fa.d20260402
-  sha256: c6fd6652557c63e3f2605d2d0eb37ebc531c8c5abb882c5025fad1a7bd21d5b8
+  version: 0.0.3.dev12+gd7f0372eb.d20260402
+  sha256: 85889b0831093e45f25899789f99f1ffb264aeb8a08df87d87ec450782ed54a8
   requires_dist:
   - numpy
   - magicgui
@@ -6955,6 +6955,7 @@ packages:
   - matplotlib
   - pandas
   - packaging
+  - napari>=0.6
   - tox ; extra == 'testing'
   - pytest ; extra == 'testing'
   - pytest-cov ; extra == 'testing'
