@@ -86,7 +86,5 @@ venv/
 # Files produced during testing
 *.csv
 *.clf
-feature_vis_demo.gif
 apply_classifier.ipynb
-feature_viz_demo.mov
-feature_viz_demo.webp
+example/recordings/
