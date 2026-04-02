@@ -1,21 +1,19 @@
 name: napari-feature-visualization
 display_name: Napari Feature Visualization
-# use 'hidden' to remove plugin from napari hub search results
 visibility: public
-# see https://napari.org/stable/plugins/manifest.html for valid categories
 categories: ["Annotation"]
 contributions:
   commands:
     - id: napari-feature-visualization.make_sample_data
       python_name: napari_feature_visualization._sample_data:make_sample_data
       title: Load sample data from Napari Feature Visualization
-    - id: napari-feature-visualization.feature_vis
-      python_name: napari_feature_visualization.feature_vis:feature_vis
-      title: Visualize features on label layer
+    - id: napari-feature-visualization.feature_vis_widget
+      python_name: napari_feature_visualization._widget:FeatureVisWidget
+      title: Feature Visualization
   sample_data:
     - command: napari-feature-visualization.make_sample_data
       display_name: Napari Feature Visualization
       key: unique_id.1
   widgets:
-    - command: napari-feature-visualization.feature_vis
+    - command: napari-feature-visualization.feature_vis_widget
       display_name: Feature Visualization
