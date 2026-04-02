@@ -25,12 +25,9 @@ classifiers = [
 requires-python = ">=3.10"
 dependencies = [
     "numpy",
-    "magicgui",
     "qtpy",
-    "scikit-image",
     "matplotlib",
     "pandas",
-    "packaging",
     "napari>=0.6",
 ]
 
@@ -41,7 +38,7 @@ testing = [
     "pytest-cov",  # https://pytest-cov.readthedocs.io/en/latest/
     "pytest-qt",  # https://pytest-qt.readthedocs.io/en/latest/
     "napari",
-    "pyqt5",
+    "pyqt6",
 ]
 
 [project.entry-points."napari.manifest"]
@@ -88,7 +85,6 @@ lint.select = [
 ]
 lint.ignore = [
     "E501", # line too long — ruff format enforces line length.
-    "UP006", "UP007", # type annotation. magicgui requires runtime type annotations.
 ]
 
 exclude = [

@@ -219,3 +219,38 @@ def test_compute_colormap_categorical_label_colormap(categorical_df):
     )
     assert None in color_dict
     assert len(color_dict) > 1
+
+
+def test_compute_colormap_categorical_single_category():
+    # Bug 1: all rows share the same category value.
+    # pd.Series.map() returns float64 when the mapped result is homogeneous,
+    # which caused IndexError on `sampled[mapped.values - 1]`.
+    df = pd.DataFrame(
+        {
+            "label": [1, 2, 3],
+            "marker": ["nanog +", "nanog +", "nanog +"],
+        }
+    )
+    color_dict, _ = compute_colormap(df, "marker", "label", "tab10 (10)", 0.0, 1.0)
+    assert None in color_dict
+    # All three labels should share the same color (first tab10 color)
+    np.testing.assert_array_equal(color_dict[1], color_dict[2])
+    np.testing.assert_array_equal(color_dict[1], color_dict[3])
+
+
+def test_compute_colormap_categorical_pandas_categorical_dtype():
+    # Bug 2: feature column has pandas Categorical dtype.
+    # pd.Series.map() preserves Categorical dtype, and `Categorical - 1`
+    # raises TypeError: unsupported operand type(s) for -: 'Categorical' and 'int'.
+    df = pd.DataFrame(
+        {
+            "label": [1, 2, 3, 4],
+            "roi": pd.Categorical(["well_1", "well_1", "well_2", "well_2"]),
+        }
+    )
+    color_dict, _ = compute_colormap(df, "roi", "label", "tab10 (10)", 0.0, 1.0)
+    assert None in color_dict
+    # well_1 labels share color, well_2 labels share a different color
+    np.testing.assert_array_equal(color_dict[1], color_dict[2])
+    np.testing.assert_array_equal(color_dict[3], color_dict[4])
+    assert not np.array_equal(color_dict[1], color_dict[3])

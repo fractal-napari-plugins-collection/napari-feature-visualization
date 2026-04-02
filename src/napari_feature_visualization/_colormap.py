@@ -167,13 +167,18 @@ def _categorical(
 
     cmap_name = colormap_name.split(" (")[0]
 
+    # Convert to a plain int numpy array: pd.Series.map() may return float64
+    # (when result is homogeneous) or preserve Categorical dtype, both of which
+    # break numpy fancy indexing.
+    indices = np.asarray(mapped, dtype=int)
+
     if cmap_name == "label_colormap" or cmap_name not in QUALITATIVE_CMAPS:
         cat_cmap = label_colormap(num_categories + 1)
-        colors = cat_cmap.map(mapped.values)
+        colors = cat_cmap.map(indices)
     else:
         mpl_cmap = mpl.colormaps[cmap_name]
         sampled = mpl_cmap(np.arange(num_categories))
-        colors = sampled[mapped.values - 1]
+        colors = sampled[indices - 1]
 
     max_label = df["_label"].max()
     props = np.zeros(max_label + 1, dtype=object)

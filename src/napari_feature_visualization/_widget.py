@@ -1,4 +1,18 @@
-"""Qt-based feature visualization widget."""
+"""Qt-based feature visualization widget.
+
+Architecture notes
+------------------
+* Data source is either the active Labels layer's ``.features`` DataFrame or a
+  user-selected CSV file.  The source toggle radio buttons control which path
+  is used; ``_get_df()`` dispatches accordingly.
+* The widget tracks ``viewer.layers.selection.events.active`` to always reflect
+  the currently selected Labels layer without requiring the user to choose from
+  a dropdown.
+* **Do not add** ``from __future__ import annotations`` to this file.  napari
+  injects the ``viewer`` argument by inspecting ``__init__``'s type annotations
+  at runtime via ``inspect.signature()``.  The future-annotations import makes
+  all annotations lazy strings, which breaks that mechanism.
+"""
 
 import math
 import pathlib
@@ -64,7 +78,7 @@ def _compute_ticks(lower: float, upper: float, max_ticks: int = 5) -> list[float
     if lower >= upper:
         return [lower]
     span = upper - lower
-    target_n = max(1, max_ticks - 2)  # desired interior count
+    target_n = max(0, max_ticks - 2)  # desired interior count
     raw_step = span / (target_n + 1)
     magnitude = 10 ** math.floor(math.log10(raw_step))
     step = magnitude  # fallback; always overwritten by the loop below
@@ -460,8 +474,6 @@ class FeatureVisWidget(QWidget):  # type: ignore[misc]
             df, feature, label_col, colormap_name, lower, upper
         )
         self._current_layer.colormap = DirectLabelColormap(color_dict=color_dict)
-        if self._csv_radio.isChecked():
-            self._current_layer.properties = label_properties
 
     # ------------------------------------------------------------------
     # Helpers
