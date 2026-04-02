@@ -12,8 +12,7 @@ label by any numeric or categorical feature column, with support for both
 continuous colormaps (with adjustable contrast limits) and qualitative
 colormaps for categorical data.
 
-<!-- TODO: replace with new showcase video on real data -->
-<img src="https://github.com/user-attachments/assets/d2c83d70-d122-4e08-812f-12c5e6006488" alt="feature_vis_demo" style="width: 100%;"/>
+![feature_viz_demo](https://github.com/user-attachments/assets/4c7e2d37-2981-43bc-9bb6-1f59ac973dd1)
 
 Feature data can be loaded from a CSV file or read directly from
 `layer.features` — enabling visualization of measurements stored in OME-Zarrs
@@ -33,8 +32,6 @@ pip install napari-feature-visualization
 
 Open the widget via **Plugins → Feature Visualization**.
 
-<!-- TODO: screenshot — widget overview with a Labels layer selected -->
-
 ### 1. Select a data source
 
 The widget has two modes, selected with the radio buttons at the top:
@@ -46,7 +43,7 @@ The widget has two modes, selected with the radio buttons at the top:
   The CSV must have one row per label and at least one column whose values
   match the label IDs in the image.
 
-<!-- TODO: screenshot — CSV mode with file picker visible -->
+<img width="1983" height="1243" alt="feature_viz_overview" src="https://github.com/user-attachments/assets/56a41144-9c2c-460e-ad06-11fc5df6b6d8" />
 
 ### 2. Select a Labels layer
 
@@ -76,8 +73,10 @@ enough to cover the number of unique categories are shown. The default is
 available qualitative colormaps the napari `label_colormap` is used as
 fallback.
 
-<!-- TODO: screenshot — continuous feature colored by viridis with colorbar -->
-<!-- TODO: screenshot — categorical feature colored by tab10 -->
+<img width="1983" height="1243" alt="feature_viz_continuous" src="https://github.com/user-attachments/assets/babef956-8439-43b8-962a-ca8427f4f555" />
+
+<img width="1983" height="1243" alt="feature_viz_categorical" src="https://github.com/user-attachments/assets/6a6deee3-6149-4217-a57b-d8dcebaabd7e" />
+
 
 ### 5. Adjust contrast limits (continuous features only)
 
@@ -88,7 +87,8 @@ values.
 
 The **Show colorbar** checkbox renders a labeled gradient bar below the slider.
 
-<!-- TODO: screenshot — contrast limits slider with colorbar visible -->
+<img width="578" height="98" alt="feature_viz_colorbar" src="https://github.com/user-attachments/assets/15fdca4e-b26b-4265-952d-4b50b7510b23" />
+
 
 ### 6. Apply
 
