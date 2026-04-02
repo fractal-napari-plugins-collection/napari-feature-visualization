@@ -3,9 +3,9 @@ try:
 except ImportError:
     __version__ = "unknown"
 from ._sample_data import make_sample_data
-from .feature_vis import feature_vis
+from ._widget import FeatureVisWidget
 
 __all__ = (
     "make_sample_data",
-    "feature_vis",
+    "FeatureVisWidget",
 )

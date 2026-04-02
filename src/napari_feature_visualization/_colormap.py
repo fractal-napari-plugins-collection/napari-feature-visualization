@@ -154,12 +154,16 @@ def _categorical(
     feature: str,
     colormap_name: str,
 ) -> tuple[dict, dict]:
-    unique_vals = df[feature].unique()
+    # Separate valid rows from NaN rows — NaN is not a category.
+    valid_mask = df[feature].notna()
+    valid_df = df[valid_mask]
+
+    unique_vals = valid_df[feature].unique()
     num_categories = len(unique_vals)
 
     # Map each category to a 1-based integer (0 is reserved for background)
     feature_map = {val: i + 1 for i, val in enumerate(unique_vals)}
-    mapped = df[feature].map(feature_map)
+    mapped = valid_df[feature].map(feature_map)
 
     cmap_name = colormap_name.split(" (")[0]
 
@@ -176,5 +180,10 @@ def _categorical(
     props[df["_label"]] = df[feature]
     label_properties = {feature: props}
 
-    color_dict = dict(zip(df["_label"], colors, strict=False))
+    color_dict = dict(zip(valid_df["_label"], colors, strict=False))
+
+    # Labels with NaN feature values → transparent (no data, not background)
+    for label_id in df.loc[~valid_mask, "_label"]:
+        color_dict[int(label_id)] = np.array([0.0, 0.0, 0.0, 0.0])
+
     return color_dict, label_properties
