@@ -1,22 +1,34 @@
 """napari feature visualization widget"""
 
 import pathlib
+
 import matplotlib as mpl
 import napari
 import numpy as np
 import pandas as pd
-from napari.utils.colormaps.colormap_utils import AVAILABLE_COLORMAPS
-from napari.utils.colormaps import label_colormap
 from magicgui import magic_factory
+from napari.utils.colormaps import ensure_colormap, label_colormap
+from napari.utils.colormaps.colormap_utils import AVAILABLE_COLORMAPS
 from napari.utils.notifications import show_warning
 from packaging import version
+
 from napari_feature_visualization.utils import get_df
 
 QUALITATIVE_CMAPS = {
-    'Accent': 8, 'Dark2': 8, 'Paired': 12, 'Pastel1': 9, 'Pastel2': 8, 
-    'Set1': 9, 'Set2': 8, 'Set3': 12, 'tab10': 10, 'tab20': 20, 
-    'tab20b': 20, 'tab20c': 20
+    "Accent": 8,
+    "Dark2": 8,
+    "Paired": 12,
+    "Pastel1": 9,
+    "Pastel2": 8,
+    "Set1": 9,
+    "Set2": 8,
+    "Set3": 12,
+    "tab10": 10,
+    "tab20": 20,
+    "tab20b": 20,
+    "tab20c": 20,
 }
+
 
 def check_default_label_column(df):
     if "label" in df:
@@ -79,6 +91,7 @@ def _init(widget):
             df = pd.DataFrame(widget.label_layer.value.properties)
 
         try:
+            current_colormap = widget.Colormap.value
             if pd.api.types.is_numeric_dtype(df[event]):
                 quantiles = (0.01, 0.99)
                 widget.lower_contrast_limit.value = df[event].quantile(
@@ -87,13 +100,18 @@ def _init(widget):
                 widget.upper_contrast_limit.value = df[event].quantile(
                     quantiles[1]
                 )
-                widget.Colormap.choices = list(AVAILABLE_COLORMAPS.keys())
-                if "viridis" in widget.Colormap.choices:
+                new_choices = list(AVAILABLE_COLORMAPS.keys())
+                widget.Colormap.choices = new_choices
+                if (
+                    current_colormap not in new_choices
+                    and "viridis" in new_choices
+                ):
                     widget.Colormap.value = "viridis"
             else:
                 num_categories = df[event].nunique()
                 qual_choices = [
-                    f"{cmap} ({max_colors})" for cmap, max_colors in QUALITATIVE_CMAPS.items() 
+                    f"{cmap} ({max_colors})"
+                    for cmap, max_colors in QUALITATIVE_CMAPS.items()
                     if max_colors >= num_categories
                 ]
                 if not qual_choices:
@@ -101,11 +119,18 @@ def _init(widget):
                     widget.Colormap.value = "label_colormap"
                 else:
                     widget.Colormap.choices = qual_choices
-                    tab10_choice = next((c for c in qual_choices if c.startswith("tab10 (")), None)
-                    if tab10_choice:
-                        widget.Colormap.value = tab10_choice
-                    else:
-                        widget.Colormap.value = qual_choices[0]
+                    if current_colormap not in qual_choices:
+                        tab10_choice = next(
+                            (
+                                c
+                                for c in qual_choices
+                                if c.startswith("tab10 (")
+                            ),
+                            None,
+                        )
+                        widget.Colormap.value = (
+                            tab10_choice if tab10_choice else qual_choices[0]
+                        )
 
         except KeyError:
             # Don't update the limits if a feature name is entered that isn't in the dataframe
@@ -161,21 +186,20 @@ def feature_vis(
 
     if is_continuous:
         # Rescale feature between 0 & 1 to make a colormap
-        site_df["feature_scaled"] = (site_df[feature] - lower_contrast_limit) / (
-            upper_contrast_limit - lower_contrast_limit
-        )
+        site_df["feature_scaled"] = (
+            site_df[feature] - lower_contrast_limit
+        ) / (upper_contrast_limit - lower_contrast_limit)
         # Cap the measurement between 0 & 1
         site_df.loc[site_df["feature_scaled"] < 0, "feature_scaled"] = 0
         site_df.loc[site_df["feature_scaled"] > 1, "feature_scaled"] = 1
 
-        from napari.utils.colormaps import ensure_colormap
         cmap = ensure_colormap(Colormap)
         colors = cmap.map(site_df["feature_scaled"].values)
 
         properties_array[site_df["label"]] = site_df[feature]
         label_properties = {feature: np.round(properties_array, decimals=2)}
 
-        colormap = dict(zip(site_df["label"], colors))
+        colormap = dict(zip(site_df["label"], colors, strict=False))
     else:
         # Categorical feature
         unique_features = site_df[feature].unique()
@@ -206,7 +230,7 @@ def feature_vis(
         properties_array[site_df["label"]] = site_df[feature]
         label_properties = {feature: properties_array}
 
-        colormap = dict(zip(site_df["label"], colors))
+        colormap = dict(zip(site_df["label"], colors, strict=False))
 
     # Show missing objects as black
     colormap[None] = [0.0, 0.0, 0.0, 1.0]
